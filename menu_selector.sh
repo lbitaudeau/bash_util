@@ -82,6 +82,25 @@ function menu_handle_down()
     position=$(( position + 1))
 }
 
+# function menu_handle_up()
+# {
+#     if [[ $position -eq 0 ]]; then
+#         return
+#     fi
+#      # go down
+#     if [[ $position -eq $pos_min ]]; then
+#         # increase cursor pos as we need to display =====
+#         AEC_UP 
+#         pos_min=$(( pos_min-1 )) # decrease minimal position
+#         print_menu_screen "$(( position-1 ))" "$(( position+size-2 ))" "- \e[34m" "\e[0m" "${inputs[@]}"
+#         AEC_PREV_LINE $(( line_shift-2 ))
+#     else
+#         printf "\033[0A"
+#         # AEC_UP
+#     fi
+#     position=$(( position - 1))
+# }
+
 function menu_handle_up()
 {
     if [[ $position -eq 0 ]]; then
@@ -89,14 +108,12 @@ function menu_handle_up()
     fi
      # go down
     if [[ $position -eq $pos_min ]]; then
-        # increase cursor pos as we need to display =====
-        AEC_UP 
+        printf "\033[0A" # increase cursor pos as we need to display =====
         pos_min=$(( pos_min-1 )) # decrease minimal position
         print_menu_screen "$(( position-1 ))" "$(( position+size-2 ))" "- \e[34m" "\e[0m" "${inputs[@]}"
-        AEC_PREV_LINE $(( line_shift-2 ))
+        printf "\033[$(( line_shift-2 ))F" # shift to the right position
     else
         printf "\033[0A"
-        # AEC_UP
     fi
     position=$(( position - 1))
 }
