@@ -64,6 +64,23 @@ function print_menu_screen()
     echo -e "============"
 }
 
+# function menu_handle_down()
+# {
+#     if [[ $position -eq $(( count - 1 )) ]]; then
+#         return
+#     fi
+#      # go down
+#     if [[ $position -ge $(( size-1 )) ]]; then
+#         echo "$position" > log.txt
+#         AEC_PREV_LINE $size
+#         print_menu_screen "$(( position-size+2 ))" "$(( position+1 ))" "- \e[34m" "\e[0m" "${inputs[@]}"
+#         AEC_PREV_LINE 2
+#         pos_min=$(( pos_min+1 ))
+#     else
+#         AEC_DOWN
+#     fi
+#     position=$(( position + 1))
+# }
 function menu_handle_down()
 {
     if [[ $position -eq $(( count - 1 )) ]]; then
@@ -72,12 +89,13 @@ function menu_handle_down()
      # go down
     if [[ $position -ge $(( size-1 )) ]]; then
         echo "$position" > log.txt
-        AEC_PREV_LINE $size
+        printf "\033[${size}F"
         print_menu_screen "$(( position-size+2 ))" "$(( position+1 ))" "- \e[34m" "\e[0m" "${inputs[@]}"
-        AEC_PREV_LINE 2
+        printf "\033[2F"
         pos_min=$(( pos_min+1 ))
     else
-        AEC_DOWN
+        printf "\033[0B"
+        # AEC_DOWN
     fi
     position=$(( position + 1))
 }
