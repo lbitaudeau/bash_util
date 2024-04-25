@@ -93,6 +93,7 @@ function print_menu_screen()
 
 function ms_handle_down()
 {
+    # rock bottom
     if [[ $position -eq $(( count - 1 )) ]]; then
         return
     fi
@@ -116,6 +117,7 @@ function ms_handle_down()
 
 function ms_handle_up()
 {
+    # sky is the limit
     if [[ $position -eq 0 ]]; then
         return
     fi
@@ -191,10 +193,8 @@ function menu_selector()
     local pos_max=$(( size - 1 ))
     local RET=0
 
+    # check if console is long enough
     if [[ $w_size -gt $lines ]]; then
-        # return 0
-        # TODO reajuste size
-        # TODO remove header (option)
         if [[ ! -z $ms_always_start ]]; then
             ms_remove_header=1
             ms_adjuste_size=1
@@ -219,8 +219,6 @@ function menu_selector()
             return
         fi
     fi
-
-    # Add option handler
 
     for elem in "${@:2}"; do
         inputs+=("$elem")
