@@ -34,6 +34,16 @@ function AEC_PREV_LINE()
     printf "\033[${1}F"
 }
 
+# clean line (check param n)
+function AEC_CLEAN_LINE()
+{
+    # $1 => n
+    # n = 2 : clean line
+    # n = 1 : clean from cursor to begin of line
+    # n = 0 : clean from cursor to end of line
+    printf "\033[${1}K"
+}
+
 function print_list_with_bound()
 {
     local min=$1
@@ -45,9 +55,12 @@ function print_list_with_bound()
     for ((i = $min; i <= $max; i++)); do
         local txti="${txt[$i]}"
         if [ -z "$txti" ]; then
-            echo -e "\e[2K" # ^2K => clean line
+            AEC_CLEAN_LINE 2
+            echo "" # new line
         else
-            echo -e "${prefix}${txti}${suffix}\e[0K" # ^0K => clean end of line
+            AEC_CLEAN_LINE 2
+            echo -e "${prefix}${txti}${suffix}"
+            
         fi
     done
 }
@@ -64,60 +77,26 @@ function print_menu_screen()
     echo -e "============"
 }
 
-# function menu_handle_down()
-# {
-#     if [[ $position -eq $(( count - 1 )) ]]; then
-#         return
-#     fi
-#      # go down
-#     if [[ $position -ge $(( size-1 )) ]]; then
-#         echo "$position" > log.txt
-#         AEC_PREV_LINE $size
-#         print_menu_screen "$(( position-size+2 ))" "$(( position+1 ))" "- \e[34m" "\e[0m" "${inputs[@]}"
-#         AEC_PREV_LINE 2
-#         pos_min=$(( pos_min+1 ))
-#     else
-#         AEC_DOWN
-#     fi
-#     position=$(( position + 1))
-# }
 function menu_handle_down()
 {
     if [[ $position -eq $(( count - 1 )) ]]; then
         return
     fi
      # go down
-    if [[ $position -ge $(( size-1 )) ]]; then
-        echo "$position" > log.txt
-        printf "\033[${size}F"
-        print_menu_screen "$(( position-size+2 ))" "$(( position+1 ))" "- \e[34m" "\e[0m" "${inputs[@]}"
-        printf "\033[2F"
+    if [[ $position -eq $pos_max ]]; then
+         # increase min/max positions
         pos_min=$(( pos_min+1 ))
+        pos_max=$(( pos_max+1 ))
+
+        AEC_PREV_LINE $(( size ))
+        print_menu_screen "$(( position-size+2 ))" "$(( position+1 ))" "- \e[34m" "\e[0m" "${inputs[@]}"
+        AEC_PREV_LINE 2
     else
-        printf "\033[0B"
-        # AEC_DOWN
+        AEC_DOWN
     fi
     position=$(( position + 1))
 }
 
-# function menu_handle_up()
-# {
-#     if [[ $position -eq 0 ]]; then
-#         return
-#     fi
-#      # go down
-#     if [[ $position -eq $pos_min ]]; then
-#         # increase cursor pos as we need to display =====
-#         AEC_UP 
-#         pos_min=$(( pos_min-1 )) # decrease minimal position
-#         print_menu_screen "$(( position-1 ))" "$(( position+size-2 ))" "- \e[34m" "\e[0m" "${inputs[@]}"
-#         AEC_PREV_LINE $(( line_shift-2 ))
-#     else
-#         printf "\033[0A"
-#         # AEC_UP
-#     fi
-#     position=$(( position - 1))
-# }
 
 function menu_handle_up()
 {
@@ -126,15 +105,20 @@ function menu_handle_up()
     fi
      # go down
     if [[ $position -eq $pos_min ]]; then
-        printf "\033[0A" # increase cursor pos as we need to display =====
-        pos_min=$(( pos_min-1 )) # decrease minimal position
+        # increase cursor pos as we need to display =====
+         # decrease min/max positions
+        pos_min=$(( pos_min-1 ))
+        pos_max=$(( pos_max-1 ))
+
+        AEC_UP 
         print_menu_screen "$(( position-1 ))" "$(( position+size-2 ))" "- \e[34m" "\e[0m" "${inputs[@]}"
-        printf "\033[$(( line_shift-2 ))F" # shift to the right position
+        AEC_PREV_LINE $(( line_shift-2 ))
     else
-        printf "\033[0A"
+        AEC_UP
     fi
     position=$(( position - 1))
 }
+
 
 function menu_selector()
 {
@@ -144,6 +128,7 @@ function menu_selector()
     local cols=$(tput cols)
     local lines=$(tput lines)
     local pos_min=0
+    local pos_max=$(( size - 1 ))
     # Add key handler
     # Add option handler
 
@@ -164,7 +149,7 @@ function menu_selector()
 
     print_menu_screen "$position" "$(( position+size-1 ))" "- \e[34m" "\e[0m" "${inputs[@]}"
     AEC_S
-    printf "\033[$(( line_shift-2 ))F" # move to the first item
+    AEC_PREV_LINE $(( line_shift-2 ))
     trap -- 'AEC_U;return 0' SIGINT
     # Add a way to reset with screen position
     
@@ -182,13 +167,11 @@ function menu_selector()
             "B")
                 menu_handle_down
                 ;;
-
             "")
                 stop=1
                 ;;
         esac
     done
-    # printf "\033[$(( w_size-position+pos_min-1 ))E"
     trap - INT
     AEC_U
     export __MENU_SELECTOR_POS=$position
