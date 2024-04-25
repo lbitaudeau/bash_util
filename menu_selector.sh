@@ -1,5 +1,8 @@
-#TODO add wrapper arround ansi escape chars
 # AEC = ANSI Escape Code
+
+_AEC_RST="\e[0m"
+
+_AEC_BLUE="\e[34m"
 
 # save cursor pos
 function AEC_S()
@@ -59,7 +62,11 @@ function print_list_with_bound()
             echo "" # new line
         else
             AEC_CLEAN_LINE 2
-            echo -e "${prefix}${txti}${suffix}"
+            if [[ -z $ms_list_num ]]; then
+                echo -e "${prefix}${txti}${suffix}"
+            else
+                echo -e "${i}${prefix}${txti}${suffix}"            
+            fi
             
         fi
     done
@@ -89,7 +96,7 @@ function menu_handle_down()
         pos_max=$(( pos_max+1 ))
 
         AEC_PREV_LINE $(( size ))
-        print_menu_screen "$(( position-size+2 ))" "$(( position+1 ))" "- \e[34m" "\e[0m" "${inputs[@]}"
+        print_menu_screen "$(( position-size+2 ))" "$(( position+1 ))" "$ms_list_prefix" "$ms_list_suffix" "${inputs[@]}"
         AEC_PREV_LINE 2
     else
         AEC_DOWN
@@ -111,7 +118,7 @@ function menu_handle_up()
         pos_max=$(( pos_max-1 ))
 
         AEC_UP 
-        print_menu_screen "$(( position-1 ))" "$(( position+size-2 ))" "- \e[34m" "\e[0m" "${inputs[@]}"
+        print_menu_screen "$(( position-1 ))" "$(( position+size-2 ))" "$ms_list_prefix" "$ms_list_suffix" "${inputs[@]}"
         AEC_PREV_LINE $(( line_shift-2 ))
     else
         AEC_UP
@@ -129,6 +136,10 @@ function menu_selector()
     local lines=$(tput lines)
     local pos_min=0
     local pos_max=$(( size - 1 ))
+
+    local ms_list_num=1
+    local ms_list_prefix=" - $_AEC_BLUE"
+    local ms_list_suffix="$_AEC_RST"
     # Add key handler
     # Add option handler
 
@@ -147,7 +158,7 @@ function menu_selector()
     local user_input
     local line_shift=$(( w_size + 1 ))
 
-    print_menu_screen "$position" "$(( position+size-1 ))" "- \e[34m" "\e[0m" "${inputs[@]}"
+    print_menu_screen "$position" "$(( position+size-1 ))" "$ms_list_prefix" "$ms_list_suffix" "${inputs[@]}"
     AEC_S
     AEC_PREV_LINE $(( line_shift-2 ))
     trap -- 'AEC_U;return 0' SIGINT
