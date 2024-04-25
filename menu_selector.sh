@@ -1,4 +1,5 @@
 #TODO add wrapper arround ansi escape chars
+# AEC = ANSI Escape Code
 
 # save cursor pos
 function AEC_S()
@@ -71,12 +72,11 @@ function menu_handle_down()
      # go down
     if [[ $position -ge $(( size-1 )) ]]; then
         echo "$position" > log.txt
-        printf "\033[${size}F"
+        AEC_PREV_LINE $size
         print_menu_screen "$(( position-size+2 ))" "$(( position+1 ))" "- \e[34m" "\e[0m" "${inputs[@]}"
-        printf "\033[2F"
+        AEC_PREV_LINE 2
         pos_min=$(( pos_min+1 ))
     else
-        # printf "\033[0B"
         AEC_DOWN
     fi
     position=$(( position + 1))
@@ -93,10 +93,10 @@ function menu_handle_up()
         AEC_UP 
         pos_min=$(( pos_min-1 )) # decrease minimal position
         print_menu_screen "$(( position-1 ))" "$(( position+size-2 ))" "- \e[34m" "\e[0m" "${inputs[@]}"
-        # printf "\033[$(( line_shift-2 ))F" # shift to the right position
         AEC_PREV_LINE $(( line_shift-2 ))
     else
         printf "\033[0A"
+        # AEC_UP
     fi
     position=$(( position - 1))
 }
